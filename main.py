@@ -13,6 +13,7 @@ import sys
 
 MAX_BYTES = 1048576
 MAX_SIDE = 1024
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 
 def png_dimensions(data):
@@ -31,6 +32,13 @@ def main():
     with open(source, "rb") as handle:
         blob = handle.read()
 
+    # Check the PNG magic bytes first, before any size or dimension
+    # check, so a non-PNG file gets a specific error instead of a
+    # misleading size error or a generic "not a PNG".
+    if blob[:8] != PNG_SIGNATURE:
+        print("entry.png has a bad PNG signature (magic bytes): "
+              "not a valid PNG file", file=sys.stderr)
+        return 1
     if len(blob) > MAX_BYTES:
         print(f"entry.png is {len(blob)} bytes, over the 1048576 limit",
               file=sys.stderr)
